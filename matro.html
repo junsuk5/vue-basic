@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>지하철 실시간 정보</title>
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://unpkg.com/lodash@4.13.1/lodash.min.js"></script>
+</head>
+
+<body>
+  <div id="watch-example">
+    <p>
+      역 이름 :
+      <input v-model="input">
+    </p>
+    <div>
+      <ul>
+        {{ message }}
+        <li v-for="item in result">
+          {{ item.trainLineNm }}, {{ item.arvlMsg2 }}, {{ item.barvlDt }}초후
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    var watchExampleVM = new Vue({
+      el: '#watch-example',
+      data: {
+        input: '',
+        result: [],
+        message: '역이름을 입력하세요'
+      },
+      watch: {
+        // 역명이 변경될 때 마다 이 기능이 실행됩니다.
+        input: function (newInput) {
+          this.result = '입력을 기다리는 중...'
+          this.debouncedGetAnswer()
+        }
+      },
+      created: function () {
+        this.debouncedGetAnswer = _.debounce(this.getAnswer, 500)
+      },
+      methods: {
+        getAnswer: function () {
+          if (this.input == '') {
+
+            return;
+          }
+          this.message = '검색 중...'
+          var vm = this
+          axios.get('http://swopenapi.seoul.go.kr/api/subway/sample/json/realtimeStationArrival/0/5/' + this.input)
+            .then(function (response) {
+              console.log(response);
+              vm.result = response.data.realtimeArrivalList;
+              vm.message = '';
+            })
+            .catch(function (error) {
+              vm.message = '에러! API 요청에 오류가 있습니다. ' + error
+            })
+        }
+      }
+    })
+  </script>
+</body>
+
+</html>
